@@ -105,3 +105,23 @@ Và chúng ta điều chỉnh bằng burpsuite khi bắt request như sau:
 
 Chúng ta đã có password và username. ==> Đăng nhập để solve bài lab.
 
+
+
+### Lab: SQL injection UNION attack, retrieving multiple values in a single column
+
+Bài lab này yêu cầu chúng ta làm tương tự như bài trước đó là tìm ra password và username để login vào page trên. Điều đó chúng ta cũng phải xác định số column và text của các cột như đã làm với bài trước.
+
+ 
+Bắt request bằng Burp Suite để check column và text như các bài lab ở trên thì thấy rằng chỉ có 1 column text trong khi chúng ta cần trả về là cả username và password. Điều đó có nghĩa là chúng ta truy xuất nhiều giá trị bằng 1 column.
+```
+Lý tưởng nhất là bao gồm một dấu tách phù hợp để cho phép bạn phân biệt các giá trị kết hợp. Ví dụ: trên Oracle, bạn có thể gửi đầu vào:
+
+' UNION SELECT username || '~' || password FROM users--
+```
+Điều đó có nghĩa là tùy thuộc mỗi môi trường sẽ có cách nối lại khác nhau, chúng ta có thể truy cập [Cheat Sheet](https://portswigger.net/web-security/sql-injection/cheat-sheet)
+
+Test thử thì chúng ta đã có được user và password mong muốn.
+
+
+
+### 
