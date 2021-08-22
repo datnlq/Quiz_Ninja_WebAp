@@ -67,13 +67,13 @@ Tuy nhiên để phù hợp với HTML của trang web mà chúng ta đã đăng
    }
    div {
        position:absolute;
-       top:520px;
-       left:50px;
+       top:510px;
+       left:80px;
        z-index: 1;
    }
 </style>
 <div>Click me</div>
-<iframe src="https://acd31f081eacf731806c6b3f00a900a1.web-security-academy.net/my-account"></iframe>
+<iframe src="https://ac061f661e51bedf80356b5100af000a.web-security-academy.net/my-account"></iframe>
 
 ```
 
