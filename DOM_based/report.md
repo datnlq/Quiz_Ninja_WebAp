@@ -195,22 +195,61 @@ different page and call the print() function. You will need to use the exploit s
 Bài lab mô tả rằng lỗi thao tác DOM-based client-side cookie này có trên web. Để hoàn thành bài lab, chúng ta phải inject 1 cookie sẽ gây ra XSS trên một trang khác và gọi hàm print ().
 Và chúng ta cần sự hỗ trợ của của exploit server.
 
+```
+document.cookie = 'lastViewedProduct=' + window.location + '; SameSite=None; Secure'
+```
+Dựa vào đoạn source code trên chúng ta nhận thấy trang web phản ánh các giá trị từ lastViewedProduct mà không mã hóa HTML một cách không an toàn, kẻ tấn công có thể sử dụng các kỹ thuật thao túng lastViewedProduct để exploit lỗ hổng này.
+
+```
+<iframe src="https://your-lab-id.web-security-academy.net/product?productId=1&'><script>print()</script>"
+onload="if(!window.x)this.src='https://your-lab-id.web-security-academy.net';window.x=1;">
+``` 
+
+Nguồn ban đầu của iframe khớp với URL của một trong các trang sản phẩm, ngoại trừ có một payload JavaScript được thêm vào cuối. Khi iframe load lần đầu tiên, trình duyệt tạm thời mở URL độc hại, URL này sau đó được lưu dưới dạng giá trị của cookie lastViewedProduct. Trang web vẫn chạy bình thường mà không biết việc gán cookie được diễn ra. Trong khi trình duyệt của nạn nhân đã lưu cookie bị nhiễm độc, việc load website sẽ chạy payload được exploit.
 
 
 
+### Lab: Exploiting DOM clobbering to enable XSS 
+
+Bài lab đã mô tả rằng website tồn tại lỗ hổng DOM-clobbering và chức năng comment của website cho phép comment HTML "an toàn". Để hoàn thành lab, chúng ta phải injection HTML vào để kích hoạt XSS.
 
 
 
+```
+<a id=defaultAvatar><a id=defaultAvatar name=avatar href="cid:&quot;onerror=alert(Hacker)//">
+```
+
+Source: 
+
+```
+let defaultAvatar = window.defaultAvatar || {avatar: '/resources/images/avatarDefault.svg'}
+```
+
+defaultAvatar được triển khai bằng cách sử dụng mẫu nguy hiểm này có chứa toán tử OR logic kết hợp với một biến toàn cục. Điều này dẫn đến lỗ hổng DOM-clobbering
+
+
+Website sử dụng bộ lọc DOMPurify để cố gắng giảm các lỗ hổng dựa trên DOM. Tuy nhiên, DOMPurify cho phép bạn sử dụng giao thức cid:, không mã hóa URL trong dấu ngoặc kép. Điều này có nghĩa là bạn có thể đưa vào một dấu ngoặc kép được mã hóa sẽ được giải mã trong thời gian chạy. Do đó, việc chèn được mô tả ở trên sẽ khiến biến defaultAvatar được gán thuộc tính clobbered {avatar: ‘cid:"onerror=alert(1)//’} vào lần cmt tiếp theo.
+
+Điều đó có nghĩa là khi chúng ta commment lần thứ 2 thì payload sẽ được kích hoạt.
+
+
+### Lab: Clobbering DOM attributes to bypass HTML filters
+
+Lab này sử dụng thư viện HTMLJanitor, thư viện dễ bị tấn công bởi DOM-clobbering. Để giải quyết bài lab, hãy xây dựng một vectơ bỏ qua bộ lọc và sử dụng chức năng chặn DOM-clobbering để đưa vào một vectơ gọi hàm print (). Bạn có thể cần sử dụng máy chủ khai thác để làm cho vectơ của bạn tự động thực thi trong trình duyệt của nạn nhân.
+
+Comment payload: 
+```
+<form id=x tabindex=0 onfocus=print()><input id=attributes>
+```
+
+
+Exploit server:
+```
+<iframe src=https://your-lab-id.web-security-academy.net/post?postId=3 onload="setTimeout(()=>this.src=this.src+'#x',500)">
+```
 
 
 
+Thư viện sử dụng thuộc tính attributes  để lọc các thuộc tính HTML. Tuy nhiên, nó vẫn có thể che lấp bản thân thuộc tính attributes , khiến độ dài không được xác định. Điều này cho phép chúng tôi đưa bất kỳ thuộc tính nào chúng tôi muốn vào phần tử biểu mẫu. Trong trường hợp này, chúng tôi sử dụng thuộc tính onfocus để nhập lậu hàm print ().
 
-
-
-
-
-
-
-
-
-
+Khi iframe được tải, sau độ trễ 500ms, iframe sẽ thêm đoạn #x vào cuối URL trang. Sự chậm trễ là cần thiết để đảm bảo rằng chú thích chứa nội dung chèn được tải trước khi JavaScript được thực thi. Điều này khiến trình duyệt tập trung vào phần tử có ID "x", là biểu mẫu chúng tôi đã tạo bên trong nhận xét. Sau đó, trình xử lý sự kiện onfocus gọi hàm print ()
