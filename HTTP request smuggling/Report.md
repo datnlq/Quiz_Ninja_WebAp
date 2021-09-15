@@ -25,4 +25,47 @@ Trong tình hướng này, điều quan trọng là hệ thống front-end và b
 
 hacker khiến 1 phần của front-end request của chúng được máy chủ back-end hiểu là phần bắt đầu của phần tiếp theo. Nó được thêm vào trước 1 cách hiệu quả cho request tiếp theo và do đó có thể ảnh hướng đến cách ứng dụng xử lý request đó
 
+## Prevent HTTP request smuggling
+
+
+HTTP request smuggling phát sinh trong các tình huống trong đó server front-end chuyển tiếp nhiều yêu cầu đến server back-end qua cùng một kết nối mạng và giao thức được sử dụng cho các kết nối back-end có nguy cơ hai máy chủ không thống nhất về ranh giới giữa các request. Một số cách chung để ngăn chặn phát sinh các lỗ hổng bắt lậu yêu cầu HTTP như sau:
+
+  + Không sử dụng lại các kết nối back-end để mỗi yêu cầu back-end được gửi qua một kết nối mạng riêng biệt.
+  + Sử dụng HTTP / 2 cho các kết nối back-end, vì giao thức này ngăn chặn sự mơ hồ về ranh giới giữa các request.
+  + Thống nhất phần mềm giữa server back-end và front-end, thống nhất tiêu chuẩn giữa các yêu cầu.
+
+
+## Exploiting HTTP request smuggling vulnerabilities
+
+- Using HTTP request smuggling to bypass front-end security controls: web front-end server được sử dụng để triển khai một số kiểm soát bảo mật, quyết định xem có cho phép xử lý các yêu cầu riêng lẻ hay không. Các yêu cầu được phép được chuyển tiếp đến server back-end, nơi chúng được coi là đã bypass các điều khiển front-end.
+
+- Revealing front-end request rewriting: máy chủ front-end thực hiện một số việc viết lại các yêu cầu trước khi chúng được chuyển tiếp đến máy chủ back-end, thường bằng cách thêm một số tiêu đề yêu cầu bổ sung.
+
+- Capturing other users' requests : 
+
+- Using HTTP request smuggling to exploit reflected XSS
+
+- Using HTTP request smuggling to turn an on-site redirect into an open redirect
+
+- Using HTTP request smuggling to perform web cache poisoning
+
+- Using HTTP request smuggling to perform web cache poisoning
+
+
+
+## HTTP request smuggling Lab
+
+### Lab: HTTP request smuggling, basic CL.TE vulnerability
+```
+This lab involves a front-end and back-end server, and the front-end server doesn't support chunked encoding. The front-end server rejects requests that aren't using the GET or POST method.
+
+To solve the lab, smuggle a request to the back-end server, so that the next request processed by the back-end server appears to use the method GPOST.
+```
+
+
+
+
+
+
+
 
