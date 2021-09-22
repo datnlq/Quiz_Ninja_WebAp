@@ -657,3 +657,38 @@ Tương tự với lý thuyết như thế chúng ta truy cập bài lab. Và th
 
 
 
+
+
+
+### Lab: Exploiting HTTP request smuggling to deliver reflected XSS
+```
+This lab involves a front-end and back-end server, and the front-end server doesn't support chunked encoding.
+
+The application is also vulnerable to reflected XSS via the User-Agent header.
+
+To solve the lab, smuggle a request to the back-end server that causes the next user's request to receive a response containing an XSS exploit that executes alert(1).
+```
+
+
+
+
+
+
+```
+
+<img src=1 onerror=alert(1)>
+```
+
+
+
+
+### Lab: Exploiting HTTP request smuggling to perform web cache poisoning
+```
+This lab involves a front-end and back-end server, and the front-end server doesn't support chunked encoding. The front-end server is configured to cache certain responses.
+
+To solve the lab, perform a request smuggling attack that causes the cache to be poisoned, such that a subsequent request for a JavaScript file receives a redirection to the exploit server. The poisoned cache should alert document.cookie.
+```
+
+
+
+
