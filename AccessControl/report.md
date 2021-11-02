@@ -206,10 +206,54 @@ Xóa carlos và solveeeeeeee
 Solve the lab by accessing the admin panel and using it to delete the user carlos.
 You can log in to your own account using the following credentials: wiener:peter 
 ```
+ Bài này thì lại cho tiếp đường url /admin tuy nhiên lần này admin sẽ được định dạng bằng roleid = 2 . Thế chắc cú là roleid của acc count đc cấp là khác 2 rồi :|
+  
+  Tuy cập vào lab cùng account được cấp sau đó truy cập admin panel thì vẫn dòng chữ quen thuộc tuy nhiên mình đã liếc mắt soi mói thử xem roleid nó ở đâu trong cái request admin panel nhưng lại không có :|
+   
+  
+  Thế là mình đoán rằng nó nằm đâu đó trong profile của account rồi tuy nhiên mình đang ở url /my-account rồi mà có thấy gì đâu ?? Nhưng lại có chức năng change email nên mình test thử và bắt request lại thì nó như này này :
+  
+  
+  
+  Có phải rõ ràng quá rồi không, theo như cú pháp trên request để change email thì chúng ta maybeeeeeee có thể change roleid nhi ?? suy nghĩ hợp lý mà :|
+  
+  
+  Mà hợp lý thì thử thôi.
+  
+ Thử chơi chơi ai ngờ được thật, thật ra đây là do cơ chế update csdl của website nên việc mình update roleid là 1 trong những "tính năng" không mong muốn của dev thôi 🚑 
+  
+  
+  Vì mình đã thay đổi roleid nên là việc truy cập admin panel để xóa là hoàn toàn được phép 🤠🤠🤠🤠 
+  
+  
+  
+  Solve đi nào
+  
+  
+  
+  
+  ### Lab: URL-based access control can be circumvented
+  ```
+  This website has an unauthenticated admin panel at /admin, but a front-end system has been configured to block external access to that path. However, the back-end application is built on a framework that supports the X-Original-URL header.
 
+To solve the lab, access the admin panel and delete the user carlos.
+  ```
     
-    
- 
+ Lần này lại là 1 sự thay đổi nho nhỏ đó chính là lần này lab đã sử dụng framework X-Original-URL, về cơ chế này thì đối với các phương thức POST sẽ deny những url như là /admin, /delete ,.... 
+  
+  
+ Test thử cái web thì y như rằng, từ chối cái nhe. Tuy nhiên khi thử format của X-Original-URL thì thấy rằng chúng ta đã truy cập được vào admin panel èo èo èo
+  
+  
+  
+  Thế là chúng ta chỉ việc xóa Carlos như sau 🚑🚑🚑🚑
+  
+  
+  Solveee
+  
+  
+  
+  ### 
     
     
     
