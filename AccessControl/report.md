@@ -262,8 +262,69 @@ To solve the lab, log in using the credentials wiener:peter and exploit the flaw
     
     
     
-    
-    
+  
+  
+ ### Lab: User ID controlled by request parameter
+ ```
+This lab has a horizontal privilege escalation vulnerability on the user account page.
+
+To solve the lab, obtain the API key for the user carlos and submit it as the solution.
+
+You can log in to your own account using the following credentials: wiener:peter
+ ```
+  
+  Về bài lab này chúng ta sẽ được tiếp cận tới 1 phong cách leo thang đặc quyền khác, đó chính là leo thang đặc quyền theo chiều ngang 😆😆😆 hay nói 1 cách khác bạn sẽ chiếm được đặc quyền của 1 account cùng cấp với account của mình .
+  
+  Để giải quyết bài lab thì phải lấy được API key từ accont carlos .
+  
+  Truy cập và login vào acc wiener chúng ta có thể thấy được API key, tuy nhiên thứ chúng ta cần lại là API Key của carlos
+  
+  
+  
+  Thử bắt các request của website để tìm ra điều đặc biệt, thì phát hiện ra khi từ home page request sang myaccount đã sử dụng parameter id = ?
+  
+  
+  
+  Lợi dụng việc đó chúng ta thay đổi wiener thành carlos và chúng ta đã khai thác leo thang đặc quyền theo chiều ngang.
+  
+  Submit API key để solve.
+  
+ ### Lab: User ID controlled by request parameter, with unpredictable user IDs
+  ```
+  This lab has a horizontal privilege escalation vulnerability on the user account page, but identifies users with GUIDs.
+
+To solve the lab, find the GUID for carlos, then submit his API key as the solution.
+
+You can log in to your own account using the following credentials: wiener:peter
+  ```
+  
+    Lần này thì chúng ta sẽ trải nghiệm 1 cơ chế để định danh người dùng khác đó chính là GUIDs.
+  
+  Để hoàn thành bài lab chúng ta cần leak được GUIDs của carlos và submit.
+  
+  
+  Đặc điểm của GUIDs là dùng để định danh cho user , tuy nhiên thì cũng định danh cho các bài viết hoặc comment nên chúng ta có thể dựa vào đó để tìm kiếm khi lab cho chúng ta 1 blog như sau  :
+  
+  
+  
+  
+  Tìm kiếm carlos blog và truy cập bắt request để leak id
+  
+  
+  
+  Sau đó sử dụng phương pháp như lab trên để truy cập vào carlos account leak API Key
+  
+  
+  
+  
+  ### Lab: User ID controlled by request parameter with data leakage in redirect
+  ```
+  This lab contains an access control vulnerability where sensitive information is leaked in the body of a redirect response.
+
+To solve the lab, obtain the API key for the user carlos and submit it as the solution.
+
+You can log in to your own account using the following credentials: wiener:peter
+  ```
     
     
     
