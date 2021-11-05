@@ -325,12 +325,68 @@ To solve the lab, obtain the API key for the user carlos and submit it as the so
 
 You can log in to your own account using the following credentials: wiener:peter
   ```
+ Bài này là 1 dạng bài chuyển hướng phổ thông, chúng ta hoàn toàn có thể sử dụng cách đã làm với bài *Lab: User ID controlled by request parameter* để áp dụng vào, như v là có thể giải quyết bài này rồi :3 
+  
+  
+  
+  
+  
+  ### Lab: User ID controlled by request parameter with password disclosure
+  ```
+  This lab has user account page that contains the current user's existing password, prefilled in a masked input.
+
+To solve the lab, retrieve the administrator's password, then use it to delete carlos.
+
+You can log in to your own account using the following credentials: wiener:peter
+  ```
+    
+ Đề bài đã gợi ý rằng ngay phần account sẽ có phần cho thấy được password của người dùng, điều đó có nghĩa rằng nếu chúng ta có thể truy cập bằng id=administrator thì có thể leak được password của admin rồi.
+  
+  Vậy chúng ta làm tương tự những lab trước , bắt các request lại để kiểm tra và khai thác như sau : 
+  
+  
+  
+  Leak được password như sau
+ 
+  pwd = rektc1zrs99g9wav0gmg
     
     
-    
-    
-    
-    
+  
+  
+  
+  Truy cập vào admin panel để xóa account Carlos để sovle 
+  
+  
+  
+  
+  ### Lab: Insecure direct object references
+ ```
+ This lab stores user chat logs directly on the server's file system, and retrieves them using static URLs.
+
+Solve the lab by finding the password for the user carlos, and logging into their account.
+  ```
+  Bài này đặc biệt hơn, chỉ là sử dụng log để ghi lại các cuộc live chat , để bài yêu cầu chúng ta tìm kiểm đâu đó trong live chat tìm ra password của carlos
+  
+  
+ Ta thấy được chức năng live chat như sau : 
+  
+  Có chức năng view transcript bắt lại request thì chúng ta thấy được nó sẽ load lại đoạn chat vừa rồi về, tuy nhiên lại thấy ffile là 2.txt điều đó có nghĩa là 1.txt là đoạn trò chuyện trước đó. 
+  
+  
+  
+  Thay đổi 1.txt để load về, đọc được đoạn chat trong file log, chúng ta có được password của carlos và login 
+  
+  
+  
+  
+  
+  
+  ### Lab: Multi-step process with no access control on one step
+  ```
+This lab has an admin panel with a flawed multi-step process for changing a user's role. You can familiarize yourself with the admin panel by logging in using the credentials administrator:admin.
+
+To solve the lab, log in using the credentials wiener:peter and exploit the flawed access controls to promote yourself to become an administrator.
+  ```
     
     
     
