@@ -253,19 +253,149 @@ To solve the lab, access the admin panel and delete the user carlos.
   
   
   
-  ### 
+  ### Lab: Method-based access control can be circumvented
+  ```
+  This lab implements access controls based partly on the HTTP method of requests. You can familiarize yourself with the admin panel by logging in using the credentials administrator:admin.
+
+To solve the lab, log in using the credentials wiener:peter and exploit the flawed access controls to promote yourself to become an administrator.
+  ```
     
     
     
+  
+  
+ ### Lab: User ID controlled by request parameter
+ ```
+This lab has a horizontal privilege escalation vulnerability on the user account page.
+
+To solve the lab, obtain the API key for the user carlos and submit it as the solution.
+
+You can log in to your own account using the following credentials: wiener:peter
+ ```
+  
+  Về bài lab này chúng ta sẽ được tiếp cận tới 1 phong cách leo thang đặc quyền khác, đó chính là leo thang đặc quyền theo chiều ngang 😆😆😆 hay nói 1 cách khác bạn sẽ chiếm được đặc quyền của 1 account cùng cấp với account của mình .
+  
+  Để giải quyết bài lab thì phải lấy được API key từ accont carlos .
+  
+  Truy cập và login vào acc wiener chúng ta có thể thấy được API key, tuy nhiên thứ chúng ta cần lại là API Key của carlos
+  
+  
+  
+  Thử bắt các request của website để tìm ra điều đặc biệt, thì phát hiện ra khi từ home page request sang myaccount đã sử dụng parameter id = ?
+  
+  
+  
+  Lợi dụng việc đó chúng ta thay đổi wiener thành carlos và chúng ta đã khai thác leo thang đặc quyền theo chiều ngang.
+  
+  Submit API key để solve.
+  
+ ### Lab: User ID controlled by request parameter, with unpredictable user IDs
+  ```
+  This lab has a horizontal privilege escalation vulnerability on the user account page, but identifies users with GUIDs.
+
+To solve the lab, find the GUID for carlos, then submit his API key as the solution.
+
+You can log in to your own account using the following credentials: wiener:peter
+  ```
+  
+    Lần này thì chúng ta sẽ trải nghiệm 1 cơ chế để định danh người dùng khác đó chính là GUIDs.
+  
+  Để hoàn thành bài lab chúng ta cần leak được GUIDs của carlos và submit.
+  
+  
+  Đặc điểm của GUIDs là dùng để định danh cho user , tuy nhiên thì cũng định danh cho các bài viết hoặc comment nên chúng ta có thể dựa vào đó để tìm kiếm khi lab cho chúng ta 1 blog như sau  :
+  
+  
+  
+  
+  Tìm kiếm carlos blog và truy cập bắt request để leak id
+  
+  
+  
+  Sau đó sử dụng phương pháp như lab trên để truy cập vào carlos account leak API Key
+  
+  
+  
+  
+  ### Lab: User ID controlled by request parameter with data leakage in redirect
+  ```
+  This lab contains an access control vulnerability where sensitive information is leaked in the body of a redirect response.
+
+To solve the lab, obtain the API key for the user carlos and submit it as the solution.
+
+You can log in to your own account using the following credentials: wiener:peter
+  ```
+ Bài này là 1 dạng bài chuyển hướng phổ thông, chúng ta hoàn toàn có thể sử dụng cách đã làm với bài *Lab: User ID controlled by request parameter* để áp dụng vào, như v là có thể giải quyết bài này rồi :3 
+  
+  
+  
+  
+  
+  ### Lab: User ID controlled by request parameter with password disclosure
+  ```
+  This lab has user account page that contains the current user's existing password, prefilled in a masked input.
+
+To solve the lab, retrieve the administrator's password, then use it to delete carlos.
+
+You can log in to your own account using the following credentials: wiener:peter
+  ```
+    
+ Đề bài đã gợi ý rằng ngay phần account sẽ có phần cho thấy được password của người dùng, điều đó có nghĩa rằng nếu chúng ta có thể truy cập bằng id=administrator thì có thể leak được password của admin rồi.
+  
+  Vậy chúng ta làm tương tự những lab trước , bắt các request lại để kiểm tra và khai thác như sau : 
+  
+  
+  
+  Leak được password như sau
+ 
+  pwd = rektc1zrs99g9wav0gmg
     
     
-    
-    
-    
-    
-    
-    
-    
+  
+  
+  
+  Truy cập vào admin panel để xóa account Carlos để sovle 
+  
+  
+  
+  
+  ### Lab: Insecure direct object references
+ ```
+ This lab stores user chat logs directly on the server's file system, and retrieves them using static URLs.
+
+Solve the lab by finding the password for the user carlos, and logging into their account.
+  ```
+  Bài này đặc biệt hơn, chỉ là sử dụng log để ghi lại các cuộc live chat , để bài yêu cầu chúng ta tìm kiểm đâu đó trong live chat tìm ra password của carlos
+  
+  
+ Ta thấy được chức năng live chat như sau : 
+  
+  Có chức năng view transcript bắt lại request thì chúng ta thấy được nó sẽ load lại đoạn chat vừa rồi về, tuy nhiên lại thấy ffile là 2.txt điều đó có nghĩa là 1.txt là đoạn trò chuyện trước đó. 
+  
+  
+  
+  Thay đổi 1.txt để load về, đọc được đoạn chat trong file log, chúng ta có được password của carlos và login 
+  
+  
+  
+  
+  
+  
+  ### Lab: Multi-step process with no access control on one step
+  ```
+This lab has an admin panel with a flawed multi-step process for changing a user's role. You can familiarize yourself with the admin panel by logging in using the credentials administrator:admin.
+
+To solve the lab, log in using the credentials wiener:peter and exploit the flawed access controls to promote yourself to become an administrator.
+  ```
+
+  
+  
+  ### Referer-based access control 
+  ```
+  This lab controls access to certain admin functionality based on the Referer header. You can familiarize yourself with the admin panel by logging in using the credentials administrator:admin.
+
+To solve the lab, log in using the credentials wiener:peter and exploit the flawed access controls to promote yourself to become an administrator.
+  ```
     
     
     
